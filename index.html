@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>todolist</title>
+	<link rel="stylesheet" href="bootstrap.css">
+	<link rel="stylesheet" href="animate.css">
+	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+	<script src="vue.js"></script>
+	<style>
+		body{
+			margin: 0;
+			padding: 0;
+			font-size: 16px;
+			background-color: #cdcdcd;
+		}
+		header{
+			height: 50px;
+			background: rgba(47,47,47,0.98)
+		}
+		.div,footer{
+			width: 600px;
+			margin: 0 auto;
+			overflow: hidden;
+		}
+		header label{
+			width: 100px;
+			line-height: 50px;
+			color: #ddd;
+			font-size: 24px;
+			cursor: pointer;
+			font-weight: 100;
+		}
+		.div>input{
+			float: right;
+			width: 360px;
+			height: 24px;
+			margin-top: 12px;
+			text-indent: 10px;
+			border-radius: 5px;
+			box-shadow: 0 1px 0 rgba(225, 225, 225, 0.24),0 1px 6px rgba(0, 0, 0, 0.45) inset;
+			border: 0;
+		}
+		header .btn{
+			height: 24px;
+			float: right;
+			margin-top: 12px;
+			padding: 0 8px;
+		}
+		.div h2{
+			font-size: 24px;
+			color: #000;
+			font-weight: bold;
+			position: relative;
+		}
+		h2 span{
+			position: absolute;
+			top: 2px;
+			right: 5px;
+			display: inline-block;
+			padding: 0 5px;
+			height: 20px;
+			border-radius: 20px;
+			background: #E6E6FA;
+			line-height: 22px;
+			text-align: center;
+			color: #666;
+			font-size: 14px;
+		}
+		footer{
+			text-align: center;
+		}
+		footer a{
+			text-decoration: none;
+			color: #999;
+		}
+		ol li{
+			cursor: move;
+		}
+		ol,ul{
+			padding: 0;
+		}
+		li{
+			list-style: none;
+			height: 32px;
+			line-height: 32px;
+			background: #fff;
+			position: relative;
+			margin-bottom: 10px;
+			padding: 0 45px;
+			border-radius: 3px;
+			border-left: 5px solid #629A9C;
+			box-shadow: 0 1px 2px rgba(0,0,0,0.07);
+		}
+		li input{
+			background: #e5e5e5;
+			border: 1px solid #bbb;
+			position: absolute;
+			top: 2px;
+			left: 10px;
+			width: 22px;
+			height: 22px;
+			cursor: pointer;
+			border-radius: 2px;
+		}
+		li img{
+			cursor: pointer;
+			position: absolute;
+			top: 4px;
+			right: 5px;
+			display: inline-block;
+			width: 25px;
+			height: 25px;
+		}
+		ul li{
+			border-left: 5px solid #999;
+			opacity: 0.5;
+		}
+	</style>
+</head>
+<body>
+	<div id="wrap">
+		<top @add="add"></top>
+		<todo :list="list" @remove="remove" @changestatus="finished"></todo>
+		<finish :list="list" @remove="remove"></finish>
+		<footer>
+			Copyright &copy; 2014 todolist.cn <a>clear</a>
+		</footer>
+	</div>
+	<script>
+		Vue.component("top",{
+			template:`
+				<header>
+					<div class="div">
+						<label for="title">ToDoList</label>
+						<button @click="add" class="btn btn-primary add">添加</button>
+						<input type="text" v-model="todo" placeholder="添加待办事项" @keyup.13="add" />
+					</div>
+				</header>
+			`,
+			data(){
+				return {
+					todo:""
+				}
+			},
+			methods:{
+				add(){
+					this.$emit("add",this.todo);
+					this.todo = ""
+				}
+			}
+		})
+
+		Vue.component("todo",{
+			template:`
+				<div class="div">
+					<h2>
+						正在进行
+						<span>{{count}}</span>
+					</h2>
+					<p v-if="!count">目前没有待办事项</p>
+					<ol>
+						<transition-group enter-active-class="animated fadeIn" leave-active-class="animated fadeOutRight">
+							<li v-if="!item.status" v-for="(item,index) of list" :key="item.name">
+								<input type="checkbox" @click="changestatus(index)" />
+								{{item.name}}
+								<img src="1.png" alt="" @click="remove(index)">
+							</li>
+						</transition-group>
+					</ol>
+				</div>
+			`,
+			props:["list"],
+			methods:{
+				remove(index){
+					this.$emit("remove",index)
+				},
+				changestatus(index){
+					this.$emit("changestatus",index)
+				}
+			},
+			computed:{
+				count(){
+					var count = 0;
+					for(let item of this.list){
+						if(!item.status){
+							count++;
+						}
+					}
+					return count;
+				}
+			}
+		})
+
+		Vue.component("finish",{
+			template:`
+				<div class="div">
+					<h2>已经完成
+						<span>{{count}}</span>
+					</h2>
+					<ul>
+						<transition-group enter-active-class="animated fadeIn" leave-active-class="animated fadeOutRight">
+							<li v-if="item.status" v-for="(item,index) of list" :key="item.name">
+								<input type="checkbox" checked disabled title="已完成事项" />
+								{{item.name}}
+								<img src="1.png" alt="" @click="remove(index)"">
+							</li>
+						</transition-group>
+					</ul>
+					<p v-if="!count">目前没有已完成的事项</p>
+				</div>
+			`,
+			props:["list"],
+			methods:{
+				remove(index){
+					this.$emit("remove",index)
+				}
+			},
+			computed:{
+				count(){
+					var count = 0;
+					for(let item of this.list){
+						if(item.status){
+							count++;
+						}
+					}
+					return count;
+				}
+			}
+		})
+
+		window.onunload = function(){
+			localStorage.setItem("list",JSON.stringify(root.list))
+		}
+
+		var root = new Vue({
+			el:"#wrap",
+			data(){
+				return {
+					list:[]
+				}
+			},
+			methods:{
+				add(todo){
+					var obj = {
+						name:todo,
+						status:false
+					}
+					this.list.push(obj);
+				},
+				remove(index){
+					this.list.splice(index,1);
+				},
+				finished(index){
+					this.list[index].status = true;
+				}
+			},
+			mounted(){
+				var list = JSON.parse(localStorage.getItem("list"));
+				if(list){
+					this.list = list;
+				}
+			}
+		})
+	</script>
+</body>
+</html>
